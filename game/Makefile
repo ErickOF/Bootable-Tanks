@@ -9,7 +9,7 @@ build:
 	@nasm -f bin -o $(APP).com -Dcom_file=1 $(APP).asm
 
 clean:
-	@rm tank.img tank.com
+	@rm $(APP).img $(APP).com
 
-runqemu: tank.img
-	@qemu-system-i386 -fda tank.img
+runqemu:
+	@qemu-system-i386 -fda $(APP).img
