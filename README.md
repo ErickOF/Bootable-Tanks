@@ -66,3 +66,10 @@ BACKGROUND:
         dw 0b0111111111111111;1111111111111110
         dw 0b0000000000000000;0000000000000000
 ```
+
+## Links de referencia
+[Boot Sector Graphical Programming - Tutorial](https://xlogicx.net/Boot_Sector_Graphical_Programming_-_Tutorial.html)
+[Nanochess](https://nanochess.org/)
+[FBird](https://github.com/nanochess/fbird)
+[BootRogue](https://github.com/nanochess/bootRogue)
+[Pillman](https://github.com/nanochess/Pillman)
