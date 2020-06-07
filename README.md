@@ -1,4 +1,4 @@
-# Bootable-Tanks
+# Bootable Tanks
 
 ## Compilar
 
@@ -38,9 +38,9 @@ y en el medio se dibujará el laberinto.
 
 * En la pantalla resultante se dibujará un laberinto con cuadros de 8x8, es decir un cuadriculla de 21x32.
 
-* El laberinto es simetrico para ahorrar memoria. Aquí pongo comentarios con la otra mitad para que la vean. Los 1s son campos libres para andar y los 0s son paredes.
-
 ![alt text](imgs/screen.png)
+
+* El laberinto es simétrico para ahorrar memoria. Aquí pongo comentarios con la otra mitad para que la vean. Los 1s son campos libres para andar y los 0s son paredes.
 
 ```asm
 BACKGROUND:
@@ -66,3 +66,10 @@ BACKGROUND:
         dw 0b0111111111111111;1111111111111110
         dw 0b0000000000000000;0000000000000000
 ```
+
+## Links de referencia
+* [Boot Sector Graphical Programming - Tutorial](https://xlogicx.net/Boot_Sector_Graphical_Programming_-_Tutorial.html)
+* [Nanochess](https://nanochess.org/)
+* [FBird](https://github.com/nanochess/fbird)
+* [BootRogue](https://github.com/nanochess/bootRogue)
+* [Pillman](https://github.com/nanochess/Pillman)
