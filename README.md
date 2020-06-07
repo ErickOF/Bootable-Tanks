@@ -68,8 +68,8 @@ BACKGROUND:
 ```
 
 ## Links de referencia
-[Boot Sector Graphical Programming - Tutorial](https://xlogicx.net/Boot_Sector_Graphical_Programming_-_Tutorial.html)
-[Nanochess](https://nanochess.org/)
-[FBird](https://github.com/nanochess/fbird)
-[BootRogue](https://github.com/nanochess/bootRogue)
-[Pillman](https://github.com/nanochess/Pillman)
+* [Boot Sector Graphical Programming - Tutorial](https://xlogicx.net/Boot_Sector_Graphical_Programming_-_Tutorial.html)
+* [Nanochess](https://nanochess.org/)
+* [FBird](https://github.com/nanochess/fbird)
+* [BootRogue](https://github.com/nanochess/bootRogue)
+* [Pillman](https://github.com/nanochess/Pillman)
