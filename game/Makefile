@@ -12,4 +12,5 @@ clean:
 	@rm $(APP).img $(APP).com
 
 runqemu:
-	@qemu-system-i386 -fda $(APP).img
+	# RAM = 4GB
+	@qemu-system-i386 -m 4096 -drive file=$(APP).img,format=raw

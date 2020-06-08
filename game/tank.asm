@@ -19,15 +19,18 @@ TILE_SIZE               equ     8           ; Sprites de 8x8
 BASE_COLOR              equ     0x0C00      ; Black
 BG_COLOR:               equ     0x09        ; Azul
 WALL_COLOR:             equ     0x02        ; Verde
-PLAYER_COLOR:           equ     0x05        ; Amarillo
+PLAYER_COLOR:           equ     0x2C        ; Amarillo
 
 
 ;--------------------------------Teclas--------------------------------
-LEFT_KEY:               equ     75
-RIGHT_KEY:              equ     77
-UP_KEY:                 equ     72
-DOWN_KEY:               equ     80
-
+LEFT_KEY:               equ     0x4B
+RIGHT_KEY:              equ     0x4D
+UP_KEY:                 equ     0x48
+DOWN_KEY:               equ     0x50
+; Tecla de reinicio
+U_KEY                   equ     0x16
+; Tecla de pausa
+P_KEY                   equ     0x19
 
 BOOT:
     ; Set mode 0x13 (320x200x256 VGA)
@@ -35,8 +38,13 @@ BOOT:
     mov     bx, 0x0105
     int     0x10
 
+START:
+    mov word [current_color], BASE_COLOR
     mov byte [current_level], 0x01
     mov byte [destr_tanks], 0x0
+    ; Empieza en el centro
+    mov word [player_x], 0x00A0
+    mov word [player_y], 0x0060
 
 GAME_LOOP:
     ; i = 0
@@ -48,13 +56,13 @@ GAME_LOOP:
     ; 32px de padding
     add     cx, 0x0020
 
-    mov word [CURRENT_COLOR], BASE_COLOR
 DESTROYED_TANKS_COUNT:
     ; Cargar el mensaje de tanques destruidos
     mov     si, DESTROYED_TANKS
     ; Function teletype
     ; http://www.ctyme.com/intr/rb-0106.htm
     mov     ah, 0x0E
+
 DESTROYED_TANKS_CHAR:
     ; Carga el byte actual en SI y aumentar la direccion
     lodsb
@@ -113,6 +121,42 @@ DONE:
 
     pop     dx
 
+CHECK_KEY:
+    ; Leer el status de la entrada
+    mov     ah, 0x01        
+    int     0x16
+    ; Si no hay una tecla
+    jz      MAZE_ROW_LOOP
+
+GET_KEY:
+    ; Leer el caracter
+    mov     ah, 0x0
+    int     0x16
+
+    ; Si es una u se reinicia el juego
+    cmp     ah, U_KEY
+    je      START
+
+CHECK_UP:
+    cmp     ah, UP_KEY
+    jne     CHECK_DOWN
+    sub byte [player_y], TILE_SIZE
+
+CHECK_DOWN:
+    cmp     ah, DOWN_KEY
+    jne     CHECK_LEFT
+    add byte [player_y], TILE_SIZE
+
+CHECK_LEFT:
+    cmp     ah, LEFT_KEY
+    jne     CHECK_RIGHT
+    sub byte [player_x], TILE_SIZE
+
+CHECK_RIGHT:
+    cmp     ah, RIGHT_KEY
+    jne     MAZE_ROW_LOOP
+    add byte [player_x], TILE_SIZE
+
 MAZE_ROW_LOOP: ; for i in range(ROWS)
     cmp     dx, ROWS
     ; if (i != ROWS)
@@ -138,6 +182,24 @@ DRAW_TILE:
     ; Sprite de mxn (8x8)
     mov     ax, TILE_SIZE
     mov     bx, TILE_SIZE
+    mov word [current_color], BASE_COLOR
+
+    ; if (j == player_x
+    cmp     cx, [player_x]
+    jne     SET_BG_COLOR
+    ; && i == player_y)
+    cmp     dx, [player_y]
+    je      SET_PLAYER_COLOR
+
+    ; else
+    jmp     SET_BG_COLOR
+
+SET_PLAYER_COLOR:
+    add byte [current_color], PLAYER_COLOR
+    jmp     DRAW_TILE_ROW
+
+SET_BG_COLOR:
+    add byte [current_color], BG_COLOR
 
 DRAW_TILE_ROW:
     ; if (ax > 0)
@@ -145,11 +207,6 @@ DRAW_TILE_ROW:
     jg      DRAW_TILE_COL
     ; j += TILE_SIZE
     add     cx, TILE_SIZE
-    ; ----------------------------------------------------
-    ; Este es de prueba, borrar cuando se dibuja el cuadro
-    ; Pintar un color distinto en cada sprite
-    add byte [CURRENT_COLOR], 0x01
-    ; ----------------------------------------------------
     
     ; Siguiente columna
     jmp     MAZE_COL_LOOP
@@ -165,7 +222,6 @@ DRAW_TILE_COL:
     dec     ax
     jmp     DRAW_TILE_ROW
 
-
 DRAW_PIXEL:
     push    cx
     push    dx
@@ -176,7 +232,7 @@ DRAW_PIXEL:
     push    ax
 
     ; Dibujar sprite
-    mov word ax, [CURRENT_COLOR]
+    mov word ax, [current_color]
     push    bx
     xor     bx, bx
     int     0x10
@@ -197,10 +253,13 @@ DRAW_PIXEL:
 destr_tanks             db      0x0
 ; Nivel actual de 1 - 3
 current_level           db      0x0
+; Desde el origin de la columna
+player_x:               dw      0x0
+; Desde el origin de la fila
+player_y:               dw      0x0
 DESTROYED_TANKS:        db      "Tanques: ", 0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
-CURRENT_COLOR:          db      0x0
-PLAYER                  db      0b00000000,0b00000000,0b00000000,0b00000000,0b00000000
+current_color:          db      0x0
 ; Padding
 times 510 - ($-$$)      db      0x0
 ; Se convierte en un sector booteable
