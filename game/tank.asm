@@ -2,26 +2,24 @@ bits 16
 ; Direccion de inicio
 [org 0x7C00]
 
-; cx -> x
-; dx -> y
-
 ;------------------------------CONSTANTES------------------------------
 ; Pantalla de 320x200x256
-ROWS                    equ     184
-COLS                    equ     288
-TILE_SIZE               equ     8          ; Sprites de 10x10
+ROWS                    equ     184         ; 200 - 16
+COLS                    equ     288         ; 320 - 32
+TILE_SIZE               equ     8           ; Sprites de 8x8
 
 ;-------------------------------Colores--------------------------------
 ; Se usa una representacion de 8 bit para cada color de la forma
 ; RRRGGGBB
 ; Hay una imagen llamada 8bit_color_mode.png con todos los colores
 ; posibles, si quieren cambiar un color, solo buscan la fila i y la
-; columna j y el valor decimal sera (i * 15 + j), lo convierten a hex
-; y ese es el color que usan
-BG_COLOR:               equ     0x0C09      ; Azul
-PLAYER_COLOR:           equ     0x02        ; Verde
-
-;CURRENT_COLOR:          db      0x0
+; columna j y el valor decimal sera, lo convierten a hex
+; y ese es el color que usan, y tiene que usarse BASE_COLOR + el color
+; que se obtuvo
+BASE_COLOR              equ     0x0C00      ; Black
+BG_COLOR:               equ     0x09        ; Azul
+WALL_COLOR:             equ     0x02        ; Verde
+PLAYER_COLOR:           equ     0x05        ; Amarillo
 
 
 ;--------------------------------Teclas--------------------------------
@@ -33,8 +31,8 @@ DOWN_KEY:               equ     80
 
 BOOT:
     ; Set mode 0x13 (320x200x256 VGA)
-    mov ax, 0x0013
-    mov bx, 0x0105
+    mov     ax, 0x0013
+    mov     bx, 0x0105
     int     0x10
 
 GAME_LOOP:
@@ -47,17 +45,19 @@ GAME_LOOP:
     ; 32px de padding
     add     cx, 0x0020
 
-MAZE_ROW_LOOP:
+    mov word [CURRENT_COLOR], BASE_COLOR
+
+MAZE_ROW_LOOP: ; for i in range(ROWS)
     cmp     dx, ROWS
     ; if (i != ROWS)
     jne     MAZE_COL_LOOP
     ; Reiniciar
     jmp     GAME_LOOP
 
-MAZE_COL_LOOP:
+MAZE_COL_LOOP: ; for j in range(COLS)
     cmp     cx, COLS
     ; if (j != COLS)
-    jne     DRAW_TITLE
+    jne     DRAW_TILE
 
     ; j = 0
     xor     cx, cx
@@ -68,31 +68,37 @@ MAZE_COL_LOOP:
     ; Siguiente fila
     jmp     MAZE_ROW_LOOP
 
-DRAW_TITLE:
-    ; Sprite de mxn (10x10)
+DRAW_TILE:
+    ; Sprite de mxn (8x8)
     mov     ax, TILE_SIZE
     mov     bx, TILE_SIZE
 
-DRAW_TITLE_ROW:
+
+DRAW_TILE_ROW:
     ; if (ax > 0)
     cmp     ax, 0
-    jg      DRAW_TITLE_COL
+    jg      DRAW_TILE_COL
     ; j += TILE_SIZE
     add     cx, TILE_SIZE
+    ; ----------------------------------------------------
+    ; Este es de prueba, borrar cuando se dibuja el cuadro
+    ; Pintar un color distinto en cada sprite
+    add byte [CURRENT_COLOR], 0x01
+    ; ----------------------------------------------------
     
     ; Siguiente columna
     jmp     MAZE_COL_LOOP
 
-DRAW_TITLE_COL:
+DRAW_TILE_COL:
     ; if (bx != 0)
-    cmp     bx, 0
+    cmp     bx, 0x0
     jne     DRAW_PIXEL
 
     ; bx = TILE_SIZE
     mov     bx, TILE_SIZE
     ; ax++
-    dec     ax;
-    jmp     DRAW_TITLE_ROW
+    dec     ax
+    jmp     DRAW_TILE_ROW
 
 
 DRAW_PIXEL:
@@ -103,10 +109,10 @@ DRAW_PIXEL:
     add     cx, bx
 
     push    ax
-    push    bx
 
     ; Dibujar sprite
-    mov ax, BG_COLOR
+    mov word ax, [CURRENT_COLOR]
+    push    bx
     xor     bx, bx
     int     0x10
 
@@ -116,11 +122,14 @@ DRAW_PIXEL:
     pop     cx
 
     dec     bx
-    jmp     DRAW_TITLE_COL
+    jmp     DRAW_TILE_COL
+
 ; mov eax,cr0
 ; or eax,1
 ; mov cr0,eax
 
+CURRENT_COLOR:          db      0x0
+PLAYER                  db      0b00000000,0b00000000,0b00000000,0b00000000,0b00000000
 ; Padding
 times 510 - ($-$$)      db      0x0
 ; Se convierte en un sector booteable
