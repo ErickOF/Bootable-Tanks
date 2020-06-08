@@ -21,7 +21,7 @@ TILE_SIZE               equ     8          ; Sprites de 10x10
 BG_COLOR:               equ     0x0C09      ; Azul
 PLAYER_COLOR:           equ     0x02        ; Verde
 
-CURRENT_COLOR:          equ     BG_COLOR
+;CURRENT_COLOR:          db      0x0
 
 
 ;--------------------------------Teclas--------------------------------
@@ -106,7 +106,7 @@ DRAW_PIXEL:
     push    bx
 
     ; Dibujar sprite
-    mov     ax, CURRENT_COLOR
+    mov ax, BG_COLOR
     xor     bx, bx
     int     0x10
 
