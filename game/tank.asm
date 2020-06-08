@@ -20,6 +20,8 @@ BASE_COLOR              equ     0x0C00      ; Black
 BG_COLOR:               equ     0x09        ; Azul
 WALL_COLOR:             equ     0x02        ; Verde
 PLAYER_COLOR:           equ     0x2C        ; Amarillo
+EAGLE_COLOR:            equ     0x28        ; Rojo
+TANK_COLOR:             equ     0x06        ; Naranja
 
 
 ;--------------------------------Teclas--------------------------------
@@ -43,8 +45,23 @@ START:
     mov byte [current_level], 0x01
     mov byte [destr_tanks], 0x0
     ; Empieza en el centro
-    mov word [player_x], 0x00A0
-    mov word [player_y], 0x0060
+    mov byte [player_x], 0x00A0
+    mov byte [player_y], 0x0060
+    ; Aguila abajo en el centro
+    mov byte [eagle_x], 0x00A0
+    mov byte [eagle_y], 0x00B0
+    ; Posicion del tanque1
+    mov byte [tank1_x], 0x0020
+    mov byte [tank1_y], 0x0010
+    ; Posicion del tanque2
+    mov word [tank2_x], 0x0118
+    mov byte [tank2_y], 0x0010
+    ; Posicion del tanque3
+    mov byte [tank3_x], 0x0060
+    mov byte [tank3_y], 0x0040
+    ; Posicion del tanque4
+    mov byte [tank4_x], 0x00E0
+    mov byte [tank4_y], 0x0040
 
 GAME_LOOP:
     ; i = 0
@@ -184,18 +201,66 @@ DRAW_TILE:
     mov     bx, TILE_SIZE
     mov word [current_color], BASE_COLOR
 
+CHECK_PLAYER_POS:
     ; if (j == player_x
     cmp     cx, [player_x]
-    jne     SET_BG_COLOR
+    jne     CHECK_EAGLE_POS
     ; && i == player_y)
     cmp     dx, [player_y]
     je      SET_PLAYER_COLOR
 
+CHECK_EAGLE_POS:
+    ; if (j == eagle_x
+    cmp     cx, [eagle_x]
+    jne     CHECK_TANK1_POS
+    ; && i == eagle_y)
+    cmp     dx, [eagle_y]
+    je      SET_EAGLE_COLOR
+
+CHECK_TANK1_POS:
+    ; if (j == tank1_x
+    cmp     cx, [tank1_x]
+    jne     CHECK_TANK2_POS
+    ; && i == tank1_y)
+    cmp     dx, [tank1_y]
+    je      SET_TANK_COLOR
+
+CHECK_TANK2_POS:
+    ; if (j == tank2_x
+    cmp     cx, [tank2_x]
+    jne     CHECK_TANK3_POS
+    ; && i == tank2_y)
+    cmp     dx, [tank2_y]
+    je      SET_TANK_COLOR
+
+CHECK_TANK3_POS:
+    ; if (j == tank3_x
+    cmp     cx, [tank3_x]
+    jne     CHECK_TANK4_POS
+    ; && i == tank3_y)
+    cmp     dx, [tank3_y]
+    je      SET_TANK_COLOR
+
+CHECK_TANK4_POS:
+    ; if (j == tank4_x
+    cmp     cx, [tank4_x]
+    jne     SET_BG_COLOR
+    ; && i == tank4_y)
+    cmp     dx, [tank4_y]
+    je      SET_TANK_COLOR
     ; else
     jmp     SET_BG_COLOR
 
 SET_PLAYER_COLOR:
     add byte [current_color], PLAYER_COLOR
+    jmp     DRAW_TILE_ROW
+
+SET_EAGLE_COLOR:
+    add byte [current_color], EAGLE_COLOR
+    jmp     DRAW_TILE_ROW
+
+SET_TANK_COLOR:
+    add byte [current_color], TANK_COLOR
     jmp     DRAW_TILE_ROW
 
 SET_BG_COLOR:
@@ -257,6 +322,16 @@ current_level           db      0x0
 player_x:               dw      0x0
 ; Desde el origin de la fila
 player_y:               dw      0x0
+eagle_x:                dw      0x0
+eagle_y:                dw      0x0
+tank1_x:                dw      0x0
+tank1_y:                dw      0x0
+tank2_x:                dw      0x0
+tank2_y:                dw      0x0
+tank3_x:                dw      0x0
+tank3_y:                dw      0x0
+tank4_x:                dw      0x0
+tank4_y:                dw      0x0
 DESTROYED_TANKS:        db      "Tanques: ", 0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
 current_color:          db      0x0
