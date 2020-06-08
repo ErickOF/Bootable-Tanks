@@ -35,6 +35,9 @@ BOOT:
     mov     bx, 0x0105
     int     0x10
 
+    mov byte [current_level], 0x01
+    mov byte [destr_tanks], 0x0
+
 GAME_LOOP:
     ; i = 0
     xor     dx, dx
@@ -46,6 +49,69 @@ GAME_LOOP:
     add     cx, 0x0020
 
     mov word [CURRENT_COLOR], BASE_COLOR
+DESTROYED_TANKS_COUNT:
+    ; Cargar el mensaje de tanques destruidos
+    mov     si, DESTROYED_TANKS
+    ; Function teletype
+    ; http://www.ctyme.com/intr/rb-0106.htm
+    mov     ah, 0x0E
+DESTROYED_TANKS_CHAR:
+    ; Carga el byte actual en SI y aumentar la direccion
+    lodsb
+    ; Verificar si ya termino de recorrer la cadena 
+    cmp     al, 0
+    je      LEVEL_MSG
+    int     0x10
+    ; Siguiente caracter
+    jmp     DESTROYED_TANKS_CHAR
+
+LEVEL_MSG:
+    ; Mostrar la cantidad de tanques destruidos
+    mov     al, '0'
+    add     al, [destr_tanks]
+    int     0x10
+
+    push    dx
+
+    ; Configurar el cursor en la fila 1 y columna 0
+    mov     ah, 0x02
+    xor     bh, bh
+    mov     dh, 0x01
+    xor     dl, dl
+    int     0x10
+
+    pop     dx
+
+    mov     ah, 0x0E
+    ; Cargar el mensaje de nivel actual
+    mov     si, CURRENT_LEVEL_MSG
+
+LEVEL_MSG_CHAR:
+    ; Carga el byte actual en SI y aumentar la direccion
+    lodsb
+    ; Verificar si ya termino de recorrer la cadena 
+    cmp     al, 0
+    je      DONE
+    int     0x10
+    ; Siguiente caracter
+    jmp     LEVEL_MSG_CHAR
+
+DONE:
+    ; Mostrar el nivel actual
+    mov     al, '0'
+    add     al, [current_level]
+    int     0x10
+
+    push    dx
+
+    ; Configurar el cursor en la fila 0 y columna 0
+    mov     ah, 0x02
+    xor     bh, bh
+    xor     dh, dh
+    xor     dl, dl
+    int     0x10
+
+    pop     dx
 
 MAZE_ROW_LOOP: ; for i in range(ROWS)
     cmp     dx, ROWS
@@ -72,7 +138,6 @@ DRAW_TILE:
     ; Sprite de mxn (8x8)
     mov     ax, TILE_SIZE
     mov     bx, TILE_SIZE
-
 
 DRAW_TILE_ROW:
     ; if (ax > 0)
@@ -128,6 +193,12 @@ DRAW_PIXEL:
 ; or eax,1
 ; mov cr0,eax
 
+; Tanques destruidos
+destr_tanks             db      0x0
+; Nivel actual de 1 - 3
+current_level           db      0x0
+DESTROYED_TANKS:        db      "Tanques: ", 0
+CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
 CURRENT_COLOR:          db      0x0
 PLAYER                  db      0b00000000,0b00000000,0b00000000,0b00000000,0b00000000
 ; Padding
