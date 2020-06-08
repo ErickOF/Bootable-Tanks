@@ -1,6 +1,6 @@
 .PHONY: all build clean runqemu
 
-all: clean build runqemu
+all: build runqemu
 
 APP=tank
 

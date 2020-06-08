@@ -21,6 +21,8 @@ TILE_SIZE               equ     8          ; Sprites de 10x10
 BG_COLOR:               equ     0x0C09      ; Azul
 PLAYER_COLOR:           equ     0x02        ; Verde
 
+CURRENT_COLOR:          equ     BG_COLOR
+
 
 ;--------------------------------Teclas--------------------------------
 LEFT_KEY:               equ     75
@@ -47,14 +49,14 @@ GAME_LOOP:
 
 MAZE_ROW_LOOP:
     cmp     dx, ROWS
-    ; if (i < ROWS)
+    ; if (i != ROWS)
     jne     MAZE_COL_LOOP
     ; Reiniciar
     jmp     GAME_LOOP
 
 MAZE_COL_LOOP:
     cmp     cx, COLS
-    ; if (j < COLS)
+    ; if (j != COLS)
     jne     DRAW_TITLE
 
     ; j = 0
@@ -67,17 +69,54 @@ MAZE_COL_LOOP:
     jmp     MAZE_ROW_LOOP
 
 DRAW_TITLE:
-    ; Dibujar sprite
-    mov     ax, BG_COLOR
-    xor     bx, bx
-    int     0x10
+    ; Sprite de mxn (10x10)
+    mov     ax, TILE_SIZE
+    mov     bx, TILE_SIZE
 
-    ; j++
+DRAW_TITLE_ROW:
+    ; if (ax > 0)
+    cmp     ax, 0
+    jg      DRAW_TITLE_COL
+    ; j += TILE_SIZE
     add     cx, TILE_SIZE
     
     ; Siguiente columna
     jmp     MAZE_COL_LOOP
 
+DRAW_TITLE_COL:
+    ; if (bx != 0)
+    cmp     bx, 0
+    jne     DRAW_PIXEL
+
+    ; bx = TILE_SIZE
+    mov     bx, TILE_SIZE
+    ; ax++
+    dec     ax;
+    jmp     DRAW_TITLE_ROW
+
+
+DRAW_PIXEL:
+    push    cx
+    push    dx
+
+    add     dx, ax
+    add     cx, bx
+
+    push    ax
+    push    bx
+
+    ; Dibujar sprite
+    mov     ax, CURRENT_COLOR
+    xor     bx, bx
+    int     0x10
+
+    pop     bx
+    pop     ax
+    pop     dx
+    pop     cx
+
+    dec     bx
+    jmp     DRAW_TITLE_COL
 ; mov eax,cr0
 ; or eax,1
 ; mov cr0,eax
