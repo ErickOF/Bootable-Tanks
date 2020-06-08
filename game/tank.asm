@@ -335,7 +335,8 @@ tank4_y:                dw      0x0
 DESTROYED_TANKS:        db      "Tanques: ", 0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
 current_color:          db      0x0
-; Padding
-times 510 - ($-$$)      db      0x0
-; Se convierte en un sector booteable
-                        dw      0xAA55
+
+; Padding Needed for windows since you cant use dd, replace 720K with the needed amount
+; Extend the second stage to (720K - 512 bytes) 
+; bootload.bin will take up first 512 bytes 
+; times 737280 - 512 - ($ - $$) db 0

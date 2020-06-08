@@ -1,45 +1,23 @@
-[bits 16]
-[ORG 0x7c00]    ; Bootloader starts at physical address 0x07c00
+[BITS 16]                   ;   This is used to indicate a 16 bit code
+[ORG 0x7C00]                ;   This is used in order to load the Bootloader by the BIOS post interrupt 0x19 at this address
 
-    ; BIOS sets DL to boot drive before jumping to the bootloader
+jmp start                   ;   Jump to label start
+start:  
+     call loadSecondSector ;  Load the second sector to memory 
+     jmp 0x200:0000;       ;  and jumps to the address of the game (tanks)
 
-    ; Since we specified an ORG(offset) of 0x7c00 we should make sure that
-    ; Data Segment (DS) is set accordingly. The DS:Offset that would work
-    ; in this case is DS=0 . That would map to segment:offset 0x0000:0x7c00
-    ; which is physical memory address (0x0000<<4)+0x7c00 . We can't rely on
-    ; DS being set to what we expect upon jumping to our code so we set it
-    ; explicitly
-    xor ax, ax
-    mov ds, ax        ; DS=0
+loadSecondSector:
+     mov ax, 0x200 ;    Sets where data from RAM where USB data is read
+     mov es, ax    ;    Copy the value to a register
+     mov cl, 2     ;    Sets the USB sector where game is written
+     mov al, 4     ;    Sets to copy game contained in 4 segments of the USB
+     mov bx, 0     ;    Offset of memory
+     mov dl, 0x80  ;    Set the drive number
+     mov dh, 0     ;    Head number
+     mov ch, 0     ;    Cylinder number
+     mov ah, 02h   ;    Read function
+     int 0x13      ;    Interrupt
+     ret           ;    If failure, return to where it started
 
-    cli               ; Turn off interrupts for SS:SP update
-                      ; to avoid a problem with buggy 8088 CPUs
-    mov ss, ax        ; SS = 0x0000
-    mov sp, 0x7c00    ; SP = 0x7c00
-                      ; We'll set the stack starting just below
-                      ; where the bootloader is at 0x0:0x7c00. The
-                      ; stack can be placed anywhere in usable and
-                      ; unused RAM.
-    sti               ; Turn interrupts back on
-
-reset:                ; Resets floppy drive
-    xor ax,ax         ; 0 = Reset floppy disk
-    int 0x13
-    jc reset          ; If carry flag was set, try again
-
-    mov ax,0x1000     ; When we read the sector, we are going to read address 0x1000
-    mov es,ax         ; Set ES with 0x1000
-
-floppy:
-    xor bx,bx   ;Ensure that the buffer offset is 0!
-    mov ah,0x2  ;2 = Read floppy
-    mov al,0x1  ;Reading one sector
-    mov ch,0x0  ;Track 1
-    mov cl,0x2  ;Sector 2, track 1
-    mov dh,0x0  ;Head 1
-    int 0x13
-    jc floppy   ;If carry flag was set, try again
-    jmp 0x1000:0000 ;Jump to 0x1000, start of second program
-
-times 510 - ($ - $$) db 0       ;Fill the rest of sector with 0
-dw 0xAA55   ;This is the boot signature
+TIMES 510 - ($-$$) db 0 ;   Bytes needed for padding, fills the rest with zeros
+dw 0xaa55 ; BIOS signature
