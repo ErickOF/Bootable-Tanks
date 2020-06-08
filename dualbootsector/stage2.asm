@@ -19,3 +19,8 @@ jmp $
 
 var:
 db 'X'
+
+; Padding
+; Extend the second stage to (720K - 512 bytes) 
+; bootload.bin will take up first 512 bytes 
+times 737280 - 512 - ($ - $$) db 0
