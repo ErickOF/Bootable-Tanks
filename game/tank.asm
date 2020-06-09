@@ -318,7 +318,7 @@ CHECK_LEFT:
 CHECK_RIGHT:
     cmp     ah, RIGHT_KEY
     jne     CHECK_ESC
-    add byte [player_x], TILE_SIZE
+    add byte [player], TILE_SIZE
 
 CHECK_ESC:
     cmp     ah, ESC_KEY
