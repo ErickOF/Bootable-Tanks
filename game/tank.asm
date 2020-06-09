@@ -57,17 +57,17 @@ START:
     mov byte [eagle_x], 0x00A0
     mov byte [eagle_y], 0x00B0
     ; Posicion del tanque1
-    mov byte [tank1_x], 0x0020
-    mov byte [tank1_y], 0x0010
+    mov byte [tank1], 0x0020
+    mov byte [tank1+2], 0x0010
     ; Posicion del tanque2
-    mov word [tank2_x], 0x0118
-    mov byte [tank2_y], 0x0010
+    mov word [tank2], 0x0118
+    mov byte [tank2+2], 0x0010
     ; Posicion del tanque3
-    mov byte [tank3_x], 0x0060
-    mov byte [tank3_y], 0x0040
+    mov byte [tank3], 0x0060
+    mov byte [tank3+2], 0x0040
     ; Posicion del tanque4
-    mov byte [tank4_x], 0x00E0
-    mov byte [tank4_y], 0x0040
+    mov byte [tank4], 0x00E0
+    mov byte [tank4+2], 0x0040
 
 GAME_LOOP:
     ; i = 0
@@ -112,19 +112,24 @@ MOVE_TANK:
     mov cx,5
     div cx   
 
-
+    mov bx, tank1
+    call move_call
+    mov bx, tank2
+    call move_call
+    mov bx, tank3
+    call move_call
+    mov bx, tank4
     call move_call
 
     jmp UPDATE_EXIT
 
-move_call:
-    mov bx, tank1_x
+move_call:    
     cmp dx,0
     je move_right
     cmp dx,1
     je move_left
 
-    mov bx, tank1_y
+    add bx,2
     cmp dx,2
     je move_down
     cmp dx,3
@@ -321,34 +326,34 @@ CHECK_EAGLE_POS:
 
 CHECK_TANK1_POS:
     ; if (j == tank1_x
-    cmp     cx, [tank1_x]
+    cmp     cx, [tank1]
     jne     CHECK_TANK2_POS
     ; && i == tank1_y)
-    cmp     dx, [tank1_y]
+    cmp     dx, [tank1+2]
     je      SET_TANK_COLOR
 
 CHECK_TANK2_POS:
     ; if (j == tank2_x
-    cmp     cx, [tank2_x]
+    cmp     cx, [tank2]
     jne     CHECK_TANK3_POS
     ; && i == tank2_y)
-    cmp     dx, [tank2_y]
+    cmp     dx, [tank2+2]
     je      SET_TANK_COLOR
 
 CHECK_TANK3_POS:
     ; if (j == tank3_x
-    cmp     cx, [tank3_x]
+    cmp     cx, [tank3]
     jne     CHECK_TANK4_POS
     ; && i == tank3_y)
-    cmp     dx, [tank3_y]
+    cmp     dx, [tank3+2]
     je      SET_TANK_COLOR
 
 CHECK_TANK4_POS:
     ; if (j == tank4_x
-    cmp     cx, [tank4_x]
+    cmp     cx, [tank4]
     jne     SET_BG_COLOR
     ; && i == tank4_y)
-    cmp     dx, [tank4_y]
+    cmp     dx, [tank4+2]
     je      SET_TANK_COLOR
     ; else
     jmp     SET_BG_COLOR
@@ -426,14 +431,10 @@ player_x:               dw      0x0
 player_y:               dw      0x0
 eagle_x:                dw      0x0
 eagle_y:                dw      0x0
-tank1_x:                dw      0x0
-tank1_y:                dw      0x0
-tank2_x:                dw      0x0
-tank2_y:                dw      0x0
-tank3_x:                dw      0x0
-tank3_y:                dw      0x0
-tank4_x:                dw      0x0
-tank4_y:                dw      0x0
+tank1:                  dd      0,0
+tank2:                  dd      0,0
+tank3:                  dd      0,0
+tank4:                  dd      0,0
 DESTROYED_TANKS:        db      "Tanques: ", 0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
 current_color:          db      0x0
