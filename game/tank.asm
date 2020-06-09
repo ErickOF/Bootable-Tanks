@@ -6,7 +6,7 @@ bits 16
 ; Pantalla de 320x200x256
 ROWS                    equ     184         ; 200 - 16
 COLS                    equ     288         ; 320 - 32
-TILE_SIZE               equ     8           ; Sprites de 8x8
+TILE_SIZE               equ     16          ; Sprites de 8x8
 
 ;-------------------------------Colores--------------------------------
 ; Se usa una representacion de 8 bit para cada color de la forma
@@ -52,23 +52,23 @@ START:
     mov byte [destr_tanks], 0x0
     mov byte [current_level],1
     ; Empieza en el centro
-    mov byte [player], 0x00A0
-    mov byte [player+2], 0x0060
+    mov byte [player], 0xA0
+    mov byte [player + 2], 0x60
     ; Aguila abajo en el centro
-    mov byte [eagle], 0x0098
-    mov byte [eagle+2], 0x00A8
+    mov byte [eagle], 0xA0
+    mov byte [eagle + 2], 0xB0
     ; Posicion del tanque1
-    mov byte [tank1], 0x0020
-    mov byte [tank1 + 2], 0x0010
+    mov byte [tank1], 0x20
+    mov byte [tank1 + 2], 0x10
     ; Posicion del tanque2
     mov word [tank2], 0x0110
-    mov byte [tank2 + 2], 0x0010
+    mov byte [tank2 + 2], 0x10
     ; Posicion del tanque3
-    mov byte [tank3], 0x0060
-    mov byte [tank3 + 2], 0x0040
+    mov byte [tank3], 0x60
+    mov byte [tank3 + 2], 0x40
     ; Posicion del tanque4
-    mov byte [tank4], 0x00E0
-    mov byte [tank4 + 2], 0x0040
+    mov byte [tank4], 0xE0
+    mov byte [tank4 + 2], 0x40
     ; Iniciar la memoria para mostrar los tanques
     mov word [DESTROYED_TANKS], 'T'
     mov word [DESTROYED_TANKS + 1], 'a'
@@ -229,9 +229,14 @@ DESTROYED_TANKS_CHAR:
     lodsb
     ; Verificar si ya termino de recorrer la cadena 
     cmp     al, 0
+    ; Imprimir siguiente mensaje
     je      LEVEL_MSG
     xor     bh, bh
-    add     bh, 0x02
+    ; Pagina donde se imprime
+    add     bh, 0x00
+    ; Color del texto
+    xor     bl, bl
+    add     bl, 0x08
     int     0x10
     ; Siguiente caracter
     jmp     DESTROYED_TANKS_CHAR
@@ -357,7 +362,7 @@ CHECK_PLAYER_POS:
     cmp     cx, [player]
     jne     CHECK_EAGLE_POS
     ; && i == player_y)
-    cmp     dx, [player+2]
+    cmp     dx, [player + 2]
     je      SET_PLAYER_COLOR
 
 CHECK_EAGLE_POS:
@@ -365,7 +370,7 @@ CHECK_EAGLE_POS:
     cmp     cx, [eagle]
     jne     CHECK_TANK1_POS
     ; && i == eagle_y)
-    cmp     dx, [eagle+2]
+    cmp     dx, [eagle + 2]
     je      SET_EAGLE_COLOR
 
 CHECK_TANK1_POS:
@@ -373,7 +378,7 @@ CHECK_TANK1_POS:
     cmp     cx, [tank1]
     jne     CHECK_TANK2_POS
     ; && i == tank1_y)
-    cmp     dx, [tank1+2]
+    cmp     dx, [tank1 + 2]
     je      SET_TANK_COLOR
 
 CHECK_TANK2_POS:
