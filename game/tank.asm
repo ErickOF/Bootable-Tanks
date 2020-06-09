@@ -34,6 +34,12 @@ U_KEY                   equ     0x16
 ; Tecla de pausa
 P_KEY                   equ     0x19
 
+
+;--------------------------------Contador--------------------------------
+game_counter            dw      0x0
+; Nivel actual de 1 - 3
+;current_level           dw      0x03
+
 BOOT:
     ; Set mode 0x13 (320x200x256 VGA)
     mov     ax, 0x0013
@@ -72,6 +78,102 @@ GAME_LOOP:
     xor     cx, cx
     ; 32px de padding
     add     cx, 0x0020
+
+UPDATE:
+    int 0x13  
+    push ax
+    push dx
+    push cx
+    push bx
+
+    mov dx,0
+    mov ax,8    
+    mov word cx,3 ; [game_level]
+    div cx
+    mov cx,ax
+
+    mov ax,[game_counter]
+    add ax,1
+    mov word [game_counter],ax
+    ; if gamecounter % game_speed == 0
+    mov dx,0     
+    div cx
+    cmp dx,0
+    jne UPDATE_EXIT
+    ;moving tanks
+    
+
+
+MOVE_TANK:
+    rdtsc ;random number dx:ax
+    ;mov ax,0  forces random
+
+    mov dx,0
+    mov cx,5
+    div cx   
+
+
+    call move_call
+
+    jmp UPDATE_EXIT
+
+move_call:
+    mov bx, tank1_x
+    cmp dx,0
+    je move_right
+    cmp dx,1
+    je move_left
+
+    mov bx, tank1_y
+    cmp dx,2
+    je move_down
+    cmp dx,3
+    je move_up
+    ;if none
+    ret
+
+move_right:
+    mov ax, [bx]
+    add ax, TILE_SIZE
+    cmp ax,0x0118
+    jg  move_right_e
+    mov [bx],ax
+move_right_e:
+    ret
+
+move_left:
+    mov ax, [bx]
+    sub ax, TILE_SIZE
+    cmp ax,0x0020
+    jl  move_left_e
+    mov [bx],ax
+move_left_e:
+    ret
+
+move_up:
+    mov ax, [bx]
+    sub ax, TILE_SIZE
+    cmp ax,0x0010
+    jl  move_up_e
+    mov [bx],ax
+move_up_e:
+    ret
+
+move_down:
+    mov ax, [bx]
+    add ax, TILE_SIZE
+    cmp ax,0x00B0
+    jg  move_down_e
+    mov [bx],ax
+move_down_e:
+    ret
+
+UPDATE_EXIT:
+    pop bx
+    pop cx
+    pop dx
+    pop ax
+    int 0x10
 
 DESTROYED_TANKS_COUNT:
     ; Cargar el mensaje de tanques destruidos
