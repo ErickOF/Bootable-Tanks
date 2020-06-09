@@ -39,25 +39,24 @@ ESC_KEY                 equ     0x01
 
 ;--------------------------------Contador--------------------------------
 game_counter            dw      0x0
-; Nivel actual de 1 - 3
-;current_level           dw      0x03
+
 
 BOOT:
     ; Set mode 0x13 (320x200x256 VGA)
     mov     ax, 0x0013
     mov     bx, 0x0105
-    int     0x10
+    int     0x10    
 
 START:
     mov word [current_color], BASE_COLOR
-    mov byte [current_level], 0x01
     mov byte [destr_tanks], 0x0
+    mov byte [current_level],1
     ; Empieza en el centro
-    mov byte [player_x], 0x00A0
-    mov byte [player_y], 0x0060
+    mov byte [player], 0x00A0
+    mov byte [player+2], 0x0060
     ; Aguila abajo en el centro
-    mov byte [eagle_x], 0x00A0
-    mov byte [eagle_y], 0x00B0
+    mov byte [eagle], 0x00A0
+    mov byte [eagle+2], 0x00B0
     ; Posicion del tanque1
     mov byte [tank1], 0x0020
     mov byte [tank1 + 2], 0x0010
@@ -93,6 +92,9 @@ START:
     mov word [CURRENT_LEVEL_MSG + 8], ' '
     mov word [CURRENT_LEVEL_MSG + 9], 0x0
 
+
+
+
 GAME_LOOP:
     ; i = 0
     xor     dx, dx
@@ -103,6 +105,18 @@ GAME_LOOP:
     ; 32px de padding
     add     cx, 0x0020
 
+    jmp UPDATE
+
+increaselevel:
+    mov ax, current_level
+    add ax,1
+    cmp ax,4
+    je increaselevel_e
+    mov [current_level],ax
+increaselevel_e:
+    ret
+
+
 UPDATE:
     int 0x13  
     push ax
@@ -110,15 +124,14 @@ UPDATE:
     push cx
     push bx
 
-    mov dx,0
-    mov ax,8    
-    mov word cx,3 ; [game_level]
-    div cx
+    mov ax,4
+    sub ax,[current_level]
     mov cx,ax
 
     mov ax,[game_counter]
     add ax,1
     mov word [game_counter],ax
+
     ; if gamecounter % game_speed == 0
     mov dx,0     
     div cx
@@ -290,17 +303,17 @@ GET_KEY:
 CHECK_UP:
     cmp     ah, UP_KEY
     jne     CHECK_DOWN
-    sub byte [player_y], TILE_SIZE
+    sub byte [player+2], TILE_SIZE
 
 CHECK_DOWN:
     cmp     ah, DOWN_KEY
     jne     CHECK_LEFT
-    add byte [player_y], TILE_SIZE
+    add byte [player+2], TILE_SIZE
 
 CHECK_LEFT:
     cmp     ah, LEFT_KEY
     jne     CHECK_RIGHT
-    sub byte [player_x], TILE_SIZE
+    sub byte [player], TILE_SIZE
 
 CHECK_RIGHT:
     cmp     ah, RIGHT_KEY
@@ -341,18 +354,18 @@ DRAW_TILE:
 
 CHECK_PLAYER_POS:
     ; if (j == player_x
-    cmp     cx, [player_x]
+    cmp     cx, [player]
     jne     CHECK_EAGLE_POS
     ; && i == player_y)
-    cmp     dx, [player_y]
+    cmp     dx, [player+2]
     je      SET_PLAYER_COLOR
 
 CHECK_EAGLE_POS:
     ; if (j == eagle_x
-    cmp     cx, [eagle_x]
+    cmp     cx, [eagle]
     jne     CHECK_TANK1_POS
     ; && i == eagle_y)
-    cmp     dx, [eagle_y]
+    cmp     dx, [eagle+2]
     je      SET_EAGLE_COLOR
 
 CHECK_TANK1_POS:
@@ -461,13 +474,11 @@ HALT:
 ; Tanques destruidos
 destr_tanks             db      0x0
 ; Nivel actual de 1 - 3
-current_level           db      0x0
+current_level           dw      0x1
 ; Desde el origin de la columna
-player_x:               dw      0x0
+player:                 dd      0,0
 ; Desde el origin de la fila
-player_y:               dw      0x0
-eagle_x:                dw      0x0
-eagle_y:                dw      0x0
+eagle:                  dd      0,0
 tank1:                  dd      0,0
 tank2:                  dd      0,0
 tank3:                  dd      0,0
