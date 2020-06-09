@@ -55,13 +55,13 @@ START:
     mov byte [player], 0x00A0
     mov byte [player+2], 0x0060
     ; Aguila abajo en el centro
-    mov byte [eagle], 0x00A0
-    mov byte [eagle+2], 0x00B0
+    mov byte [eagle], 0x0098
+    mov byte [eagle+2], 0x00A8
     ; Posicion del tanque1
     mov byte [tank1], 0x0020
     mov byte [tank1 + 2], 0x0010
     ; Posicion del tanque2
-    mov word [tank2], 0x0118
+    mov word [tank2], 0x0110
     mov byte [tank2 + 2], 0x0010
     ; Posicion del tanque3
     mov byte [tank3], 0x0060
@@ -303,22 +303,22 @@ GET_KEY:
 CHECK_UP:
     cmp     ah, UP_KEY
     jne     CHECK_DOWN
-    sub byte [player+2], TILE_SIZE
+    sub word [player+2], TILE_SIZE
 
 CHECK_DOWN:
     cmp     ah, DOWN_KEY
     jne     CHECK_LEFT
-    add byte [player+2], TILE_SIZE
+    add word [player+2], TILE_SIZE
 
 CHECK_LEFT:
     cmp     ah, LEFT_KEY
     jne     CHECK_RIGHT
-    sub byte [player], TILE_SIZE
+    sub word [player], TILE_SIZE
 
 CHECK_RIGHT:
     cmp     ah, RIGHT_KEY
     jne     CHECK_ESC
-    add byte [player], TILE_SIZE
+    add word [player], TILE_SIZE
 
 CHECK_ESC:
     cmp     ah, ESC_KEY
@@ -328,14 +328,14 @@ CHECK_ESC:
 MAZE_ROW_LOOP: ; for i in range(ROWS)
     cmp     dx, ROWS
     ; if (i != ROWS)
-    jne     MAZE_COL_LOOP
+    jl     MAZE_COL_LOOP
     ; Reiniciar
     jmp     GAME_LOOP
 
 MAZE_COL_LOOP: ; for j in range(COLS)
     cmp     cx, COLS
     ; if (j != COLS)
-    jne     DRAW_TILE
+    jl     DRAW_TILE
 
     ; j = 0
     xor     cx, cx
@@ -483,6 +483,7 @@ tank1:                  dd      0,0
 tank2:                  dd      0,0
 tank3:                  dd      0,0
 tank4:                  dd      0,0
+shoots:                 dq      0,0, 0,0, 0,0, 0,0
 DESTROYED_TANKS:        db      "Tanques: ", 0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
 current_color:          db      0x0
