@@ -33,6 +33,8 @@ DOWN_KEY:               equ     0x50
 U_KEY                   equ     0x16
 ; Tecla de pausa
 P_KEY                   equ     0x19
+; Tecla para salir
+ESC_KEY                 equ     0x01
 
 
 ;--------------------------------Contador--------------------------------
@@ -302,8 +304,13 @@ CHECK_LEFT:
 
 CHECK_RIGHT:
     cmp     ah, RIGHT_KEY
-    jne     MAZE_ROW_LOOP
+    jne     CHECK_ESC
     add byte [player_x], TILE_SIZE
+
+CHECK_ESC:
+    cmp     ah, ESC_KEY
+    jne     MAZE_ROW_LOOP
+    jmp     HALT
 
 MAZE_ROW_LOOP: ; for i in range(ROWS)
     cmp     dx, ROWS
@@ -441,6 +448,11 @@ DRAW_PIXEL:
     dec     bx
     jmp     DRAW_TILE_COL
 
+HALT:
+    ; Limpiar las banderas de interrupciones
+    cli
+    ; Detener ejecucion
+    hlt
 
 ; mov eax,cr0
 ; or eax,1
