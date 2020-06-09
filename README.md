@@ -5,7 +5,7 @@
 Para compilar y ejecutar el programa solo se debe ejecutar:
 
 ```shell
-make all
+make
 ```
 
 ## Juego
@@ -66,6 +66,19 @@ BACKGROUND:
         dw 0b0111111111111111;1111111111111110
         dw 0b0000000000000000;0000000000000000
 ```
+
+### Controles
+* **Flecha arriba:** mover arriba.
+* **Flecha abajo:** mover abajo.
+* **Flecha derecha:** mover derecha.
+* **Flecha izquierda:** mover izquierda.
+* **Tecla *u*:** reiniciar el juego.
+* **Tecla *p*:** pausar o reanudar el juego.
+* **SPACE:** disparar.
+* **ESC:** salir.
+
+### Personajes
+Los personajes son representados con cuadrados. El águila es el cuadro de color rojo, el jugador es el cuadro amarillo y los tanques son los cuadros de color café.
 
 ## Links de referencia
 * [Boot Sector Graphical Programming - Tutorial](https://xlogicx.net/Boot_Sector_Graphical_Programming_-_Tutorial.html)

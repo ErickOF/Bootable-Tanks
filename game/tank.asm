@@ -58,16 +58,38 @@ START:
     mov byte [eagle_y], 0x00B0
     ; Posicion del tanque1
     mov byte [tank1], 0x0020
-    mov byte [tank1+2], 0x0010
+    mov byte [tank1 + 2], 0x0010
     ; Posicion del tanque2
     mov word [tank2], 0x0118
-    mov byte [tank2+2], 0x0010
+    mov byte [tank2 + 2], 0x0010
     ; Posicion del tanque3
     mov byte [tank3], 0x0060
-    mov byte [tank3+2], 0x0040
+    mov byte [tank3 + 2], 0x0040
     ; Posicion del tanque4
     mov byte [tank4], 0x00E0
-    mov byte [tank4+2], 0x0040
+    mov byte [tank4 + 2], 0x0040
+    ; Iniciar la memoria para mostrar los tanques
+    mov word [DESTROYED_TANKS], 'T'
+    mov word [DESTROYED_TANKS + 1], 'a'
+    mov word [DESTROYED_TANKS + 2], 'n'
+    mov word [DESTROYED_TANKS + 3], 'q'
+    mov word [DESTROYED_TANKS + 4], 'u'
+    mov word [DESTROYED_TANKS + 5], 'e'
+    mov word [DESTROYED_TANKS + 6], 's'
+    mov word [DESTROYED_TANKS + 7], ':'
+    mov word [DESTROYED_TANKS + 8], ' '
+    mov word [DESTROYED_TANKS + 9], 0x0
+    ; Iniciar la memoria para mistrar el nivel
+    mov word [CURRENT_LEVEL_MSG], 'N'
+    mov word [CURRENT_LEVEL_MSG + 1], 'i'
+    mov word [CURRENT_LEVEL_MSG + 2], 'v'
+    mov word [CURRENT_LEVEL_MSG + 3], 'e'
+    mov word [CURRENT_LEVEL_MSG + 4], 'l'
+    mov word [CURRENT_LEVEL_MSG + 5], ':'
+    mov word [CURRENT_LEVEL_MSG + 6], ' '
+    mov word [CURRENT_LEVEL_MSG + 7], ' '
+    mov word [CURRENT_LEVEL_MSG + 8], ' '
+    mov word [CURRENT_LEVEL_MSG + 9], 0x0
 
 GAME_LOOP:
     ; i = 0
@@ -193,6 +215,8 @@ DESTROYED_TANKS_CHAR:
     ; Verificar si ya termino de recorrer la cadena 
     cmp     al, 0
     je      LEVEL_MSG
+    xor     bh, bh
+    add     bh, 0x02
     int     0x10
     ; Siguiente caracter
     jmp     DESTROYED_TANKS_CHAR
@@ -416,6 +440,7 @@ DRAW_PIXEL:
 
     dec     bx
     jmp     DRAW_TILE_COL
+
 
 ; mov eax,cr0
 ; or eax,1

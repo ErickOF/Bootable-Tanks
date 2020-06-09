@@ -8,6 +8,7 @@
 *.bc
 *.com
 *.img
+*.bin
 
 ### C ###
 # Prerequisites
