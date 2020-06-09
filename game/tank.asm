@@ -175,12 +175,16 @@ move_call:
     ret
 
 move_right:
+    push dx
     mov ax, [bx]
     add ax, TILE_SIZE
-    cmp ax,0x0118
+    mov dx,0x0120 
+    sub dx, TILE_SIZE
+    cmp ax,dx
     jg  move_right_e
     mov [bx],ax
 move_right_e:
+    pop dx
     ret
 
 move_left:
@@ -202,12 +206,16 @@ move_up_e:
     ret
 
 move_down:
+    push dx
     mov ax, [bx]
     add ax, TILE_SIZE
-    cmp ax,0x00B0
+    mov dx,0x00B8
+    sub dx,TILE_SIZE
+    cmp ax,dx
     jg  move_down_e
     mov [bx],ax
 move_down_e:
+    pop dx
     ret
 
 UPDATE_EXIT:
