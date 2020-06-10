@@ -22,6 +22,8 @@ WALL_COLOR:             equ     0x02        ; Verde
 PLAYER_COLOR:           equ     0x2C        ; Amarillo
 EAGLE_COLOR:            equ     0x28        ; Rojo
 TANK_COLOR:             equ     0x06        ; Naranja
+PLAYER_SHOOT_COLOR:     equ     0x04        ; Vino
+TANK_SHOOT_COLOR:       equ     0x05        ; Fussia (?)
 
 
 ;--------------------------------Teclas--------------------------------
@@ -29,6 +31,8 @@ LEFT_KEY:               equ     0x4B
 RIGHT_KEY:              equ     0x4D
 UP_KEY:                 equ     0x48
 DOWN_KEY:               equ     0x50
+; Tecla de disparo
+SPACE_KEY               equ     0x39
 ; Tecla de reinicio
 U_KEY                   equ     0x16
 ; Tecla de pausa
@@ -41,16 +45,23 @@ ESC_KEY                 equ     0x01
 game_counter            dw      0x0
 
 
+; Configurar el modo de video
 BOOT:
     ; Set mode 0x13 (320x200x256 VGA)
     mov     ax, 0x0013
     mov     bx, 0x0105
     int     0x10    
 
+
+; Iniciar todas las variables del juego
+; Tambien funciona para reiniciar el juego
 START:
+    ; Color base, es negro
     mov word [current_color], BASE_COLOR
+    ; Cantidad de tanques destruidos
     mov byte [destr_tanks], 0x0
-    mov byte [current_level],1
+    ; Nievel actual del juego
+    mov byte [current_level], 1
     ; Empieza en el centro
     mov byte [player], 0xA0
     mov byte [player + 2], 0x60
@@ -91,6 +102,17 @@ START:
     mov word [CURRENT_LEVEL_MSG + 7], ' '
     mov word [CURRENT_LEVEL_MSG + 8], ' '
     mov word [CURRENT_LEVEL_MSG + 9], 0x0
+    ; Direccion del jugador. Arriba por defecto
+    ; Arriba    0x00
+    ; Derecha   0x01
+    ; Abajo     0x02
+    ; Izquierda 0x03
+    mov byte [shoot_dir], 0x0;
+    ; Disparo del jugador fuera de pantalla
+    mov byte [player_shoot], 0x0
+    mov byte [player_shoot + 2], 0x0
+    ; El jugador no ha disparado
+    mov word [player_shot], 0x0
 
 
 
@@ -107,12 +129,14 @@ GAME_LOOP:
 
     jmp UPDATE
 
+
 increaselevel:
     mov ax, current_level
     add ax,1
     cmp ax,4
     je increaselevel_e
     mov [current_level],ax
+
 increaselevel_e:
     ret
 
@@ -160,6 +184,7 @@ MOVE_TANK:
 
     jmp UPDATE_EXIT
 
+
 move_call:    
     cmp dx,0
     je move_right
@@ -183,6 +208,7 @@ move_right:
     cmp ax,dx
     jg  move_right_e
     mov [bx],ax
+
 move_right_e:
     pop dx
     ret
@@ -193,6 +219,7 @@ move_left:
     cmp ax,0x0020
     jl  move_left_e
     mov [bx],ax
+
 move_left_e:
     ret
 
@@ -202,6 +229,7 @@ move_up:
     cmp ax,0x0010
     jl  move_up_e
     mov [bx],ax
+
 move_up_e:
     ret
 
@@ -214,9 +242,11 @@ move_down:
     cmp ax,dx
     jg  move_down_e
     mov [bx],ax
+
 move_down_e:
     pop dx
     ret
+
 
 UPDATE_EXIT:
     pop bx
@@ -225,6 +255,7 @@ UPDATE_EXIT:
     pop ax
     int 0x10
 
+
 DESTROYED_TANKS_COUNT:
     ; Cargar el mensaje de tanques destruidos
     mov     si, DESTROYED_TANKS
@@ -232,6 +263,8 @@ DESTROYED_TANKS_COUNT:
     ; http://www.ctyme.com/intr/rb-0106.htm
     mov     ah, 0x0E
 
+
+; Mostrar el texto con la cantidad de tanques destruidos
 DESTROYED_TANKS_CHAR:
     ; Carga el byte actual en SI y aumentar la direccion
     lodsb
@@ -249,6 +282,7 @@ DESTROYED_TANKS_CHAR:
     ; Siguiente caracter
     jmp     DESTROYED_TANKS_CHAR
 
+; Mostrar el nivel actual del juego
 LEVEL_MSG:
     ; Mostrar la cantidad de tanques destruidos
     mov     al, '0'
@@ -275,12 +309,12 @@ LEVEL_MSG_CHAR:
     lodsb
     ; Verificar si ya termino de recorrer la cadena 
     cmp     al, 0
-    je      DONE
+    je      DONE_STATUS
     int     0x10
     ; Siguiente caracter
     jmp     LEVEL_MSG_CHAR
 
-DONE:
+DONE_STATUS:
     ; Mostrar el nivel actual
     mov     al, '0'
     add     al, [current_level]
@@ -297,12 +331,14 @@ DONE:
 
     pop     dx
 
+
+; Verificar las teclas que ha presionado el usuario
 CHECK_KEY:
     ; Leer el status de la entrada
     mov     ah, 0x01        
     int     0x16
     ; Si no hay una tecla
-    jz      MAZE_ROW_LOOP
+    jz      MOV_PLAYER_SHOOT
 
 GET_KEY:
     ; Leer el caracter
@@ -316,28 +352,100 @@ GET_KEY:
 CHECK_UP:
     cmp     ah, UP_KEY
     jne     CHECK_DOWN
-    sub word [player+2], TILE_SIZE
+    sub word [player + 2], TILE_SIZE
+    ; Cambiar la direccion a arriba
+    mov word [shoot_dir], 0x0
 
 CHECK_DOWN:
     cmp     ah, DOWN_KEY
     jne     CHECK_LEFT
-    add word [player+2], TILE_SIZE
+    add word [player + 2], TILE_SIZE
+    ; Cambiar la direccion a abajo
+    mov word [shoot_dir], 0x02
 
 CHECK_LEFT:
     cmp     ah, LEFT_KEY
     jne     CHECK_RIGHT
     sub word [player], TILE_SIZE
+    ; Cambiar la direccion a la izquierda
+    mov word [shoot_dir], 0x03
 
 CHECK_RIGHT:
     cmp     ah, RIGHT_KEY
-    jne     CHECK_ESC
+    jne     CHECK_SPACE
     add word [player], TILE_SIZE
+    ; Cambiar la direccion a la derecha
+    mov word [shoot_dir], 0x01
+
+CHECK_SPACE:
+    cmp     ah, SPACE_KEY
+    jne     CHECK_ESC
+
+
+    push    ax
+
+    mov word ax, [player_shot]
+
+    cmp     ax, 0x0
+    jg      CHECK_ESC
+
+    ; Disparar
+    mov     ax, [player]
+    mov     [player_shoot], ax
+    mov     ax, [player + 2]
+    mov     [player_shoot + 2], ax
+
 
 CHECK_ESC:
+    pop     ax
+
     cmp     ah, ESC_KEY
-    jne     MAZE_ROW_LOOP
+    jne     MOV_PLAYER_SHOOT
     jmp     HALT
 
+
+MOV_PLAYER_SHOOT:
+    push    ax
+
+    ; Verificar si el jugador se movia 
+    mov word ax, [shoot_dir]
+
+    ; Mover bala hacia arriba
+    cmp     ax, 0x0
+    je      MOV_PLAYER_SHOOT_UP
+
+    ; Mover bala hacia la derecha
+    cmp     ax, 0x1
+    je      MOV_PLAYER_SHOOT_RIGHT
+
+    ; Mover bala hacia la down
+    cmp     ax, 0x2
+    je      MOV_PLAYER_SHOOT_DOWN
+
+    ; Mover bala hacia la derecha
+    jmp     MOV_PLAYER_SHOOT_LEFT
+
+MOV_PLAYER_SHOOT_UP:
+    sub word [player_shoot + 2], TILE_SIZE
+    jmp     MOV_PLAYER_SHOOT_DONE
+
+MOV_PLAYER_SHOOT_RIGHT:
+    add word [player_shoot], TILE_SIZE
+    jmp     MOV_PLAYER_SHOOT_DONE
+
+MOV_PLAYER_SHOOT_DOWN:
+    add word [player_shoot + 2], TILE_SIZE
+    jmp     MOV_PLAYER_SHOOT_DONE
+
+MOV_PLAYER_SHOOT_LEFT:
+    sub word [player_shoot], TILE_SIZE
+    jmp     MOV_PLAYER_SHOOT_DONE
+
+
+MOV_PLAYER_SHOOT_DONE:
+    pop     ax
+
+; Dibujar el laberinto
 MAZE_ROW_LOOP: ; for i in range(ROWS)
     cmp     dx, ROWS
     ; if (i != ROWS)
@@ -359,12 +467,16 @@ MAZE_COL_LOOP: ; for j in range(COLS)
     ; Siguiente fila
     jmp     MAZE_ROW_LOOP
 
+
+; Dibujar cada sprite
 DRAW_TILE:
     ; Sprite de mxn (8x8)
     mov     ax, TILE_SIZE
     mov     bx, TILE_SIZE
     mov word [current_color], BASE_COLOR
 
+
+; Verificar las posiciones de los objetos con order de prioridad
 CHECK_PLAYER_POS:
     ; if (j == player_x
     cmp     cx, [player]
@@ -376,10 +488,18 @@ CHECK_PLAYER_POS:
 CHECK_EAGLE_POS:
     ; if (j == eagle_x
     cmp     cx, [eagle]
-    jne     CHECK_TANK1_POS
+    jne     CHECK_PLAYER_SHOOT_POS
     ; && i == eagle_y)
     cmp     dx, [eagle + 2]
     je      SET_EAGLE_COLOR
+
+CHECK_PLAYER_SHOOT_POS:
+    ; if (j == player_shoot_x
+    cmp     cx, [player_shoot]
+    jne     CHECK_TANK1_POS
+    ; && i == player_shoot_y)
+    cmp     dx, [player_shoot + 2]
+    je      SET_PLAYER_SHOOT_COLOR
 
 CHECK_TANK1_POS:
     ; if (j == tank1_x
@@ -394,7 +514,7 @@ CHECK_TANK2_POS:
     cmp     cx, [tank2]
     jne     CHECK_TANK3_POS
     ; && i == tank2_y)
-    cmp     dx, [tank2+2]
+    cmp     dx, [tank2 + 2]
     je      SET_TANK_COLOR
 
 CHECK_TANK3_POS:
@@ -402,7 +522,7 @@ CHECK_TANK3_POS:
     cmp     cx, [tank3]
     jne     CHECK_TANK4_POS
     ; && i == tank3_y)
-    cmp     dx, [tank3+2]
+    cmp     dx, [tank3 + 2]
     je      SET_TANK_COLOR
 
 CHECK_TANK4_POS:
@@ -410,17 +530,23 @@ CHECK_TANK4_POS:
     cmp     cx, [tank4]
     jne     SET_BG_COLOR
     ; && i == tank4_y)
-    cmp     dx, [tank4+2]
+    cmp     dx, [tank4 + 2]
     je      SET_TANK_COLOR
     ; else
     jmp     SET_BG_COLOR
 
+
+; Configurar el color de cada objecto
 SET_PLAYER_COLOR:
     add byte [current_color], PLAYER_COLOR
     jmp     DRAW_TILE_ROW
 
 SET_EAGLE_COLOR:
     add byte [current_color], EAGLE_COLOR
+    jmp     DRAW_TILE_ROW
+
+SET_PLAYER_SHOOT_COLOR:
+    add byte [current_color], PLAYER_SHOOT_COLOR
     jmp     DRAW_TILE_ROW
 
 SET_TANK_COLOR:
@@ -430,6 +556,8 @@ SET_TANK_COLOR:
 SET_BG_COLOR:
     add byte [current_color], BG_COLOR
 
+
+; Comenzar a dibujar cada sprite
 DRAW_TILE_ROW:
     ; if (ax > 0)
     cmp     ax, 0
@@ -451,6 +579,8 @@ DRAW_TILE_COL:
     dec     ax
     jmp     DRAW_TILE_ROW
 
+
+; Dibujar un pixel del sprite
 DRAW_PIXEL:
     push    cx
     push    dx
@@ -474,6 +604,8 @@ DRAW_PIXEL:
     dec     bx
     jmp     DRAW_TILE_COL
 
+
+; Salir del juego
 HALT:
     ; Limpiar las banderas de interrupciones
     cli
@@ -489,16 +621,21 @@ destr_tanks             db      0x0
 ; Nivel actual de 1 - 3
 current_level           dw      0x1
 ; Desde el origin de la columna
-player:                 dd      0,0
+player:                 dd      0, 0
+player_shoot:           dd      0, 0
+; Direccion actual del jugador
+; Usado para saber hacia donde tienen que ir las balas
+shoot_dir:             dw      0x0
+player_shot:            dw      0x0
 ; Desde el origin de la fila
-eagle:                  dd      0,0
-tank1:                  dd      0,0
-tank2:                  dd      0,0
-tank3:                  dd      0,0
-tank4:                  dd      0,0
-shoots:                 dq      0,0, 0,0, 0,0, 0,0
-DESTROYED_TANKS:        db      "Tanques: ", 0
-CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
+eagle:                  dd      0, 0
+tank1:                  dd      0, 0
+tank2:                  dd      0, 0
+tank3:                  dd      0, 0
+tank4:                  dd      0, 0
+shoots:                 dq      0x0,0x0, 0x0,0x0, 0x0,0x0, 0x0,0x0
+DESTROYED_TANKS:        db      "Tanques: ", 0x0
+CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0x0
 current_color:          db      0x0
 
 ; Padding Needed for windows since you cant use dd, replace 720K with the needed amount
