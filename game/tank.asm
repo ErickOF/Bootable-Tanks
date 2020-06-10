@@ -353,31 +353,66 @@ CHECK_UP:
     cmp     ah, UP_KEY
     jne     CHECK_DOWN
     sub word [player + 2], TILE_SIZE
+
+    push    bx
+
+    mov word bx, [player_shot]
+    cmp     bx, 0x00
+    jne      CHECK_DOWN
+
     ; Cambiar la direccion a arriba
     mov word [shoot_dir], 0x0
 
 CHECK_DOWN:
+    pop     bx
+
     cmp     ah, DOWN_KEY
     jne     CHECK_LEFT
     add word [player + 2], TILE_SIZE
+
+    push    bx
+
+    mov word bx, [player_shot]
+    cmp     bx, 0x00
+    jne      CHECK_LEFT
+
     ; Cambiar la direccion a abajo
     mov word [shoot_dir], 0x02
 
 CHECK_LEFT:
+    pop     bx
     cmp     ah, LEFT_KEY
     jne     CHECK_RIGHT
     sub word [player], TILE_SIZE
+
+    push    bx
+
+    mov word bx, [player_shot]
+    cmp     bx, 0x00
+    jne      CHECK_RIGHT
+
     ; Cambiar la direccion a la izquierda
     mov word [shoot_dir], 0x03
 
 CHECK_RIGHT:
+    pop     bx
+
     cmp     ah, RIGHT_KEY
     jne     CHECK_SPACE
     add word [player], TILE_SIZE
+
+    push    bx
+
+    mov word bx, [player_shot]
+    cmp     bx, 0x00
+    jne      CHECK_SPACE
+
     ; Cambiar la direccion a la derecha
     mov word [shoot_dir], 0x01
 
 CHECK_SPACE:
+    pop     bx
+
     cmp     ah, SPACE_KEY
     jne     CHECK_ESC
 
@@ -395,6 +430,8 @@ CHECK_SPACE:
     mov     ax, [player + 2]
     mov     [player_shoot + 2], ax
 
+    ; El jugador ya disparo
+    mov byte [player_shot], 0x01
 
 CHECK_ESC:
     pop     ax
@@ -443,6 +480,29 @@ MOV_PLAYER_SHOOT_LEFT:
 
 
 MOV_PLAYER_SHOOT_DONE:
+    mov word ax, [player_shoot]
+    ; player_shoot_x < 16
+    cmp     ax, 0x10
+    jl      PLAYER_SHOOT_DISAPPEAR
+    ; player_shoot_x > COLS
+    cmp     ax, COLS
+    jg      PLAYER_SHOOT_DISAPPEAR
+    mov word ax, [player_shoot + 2]
+    ; player_shoot_y < 32
+    cmp     ax, 0x20
+    jl      PLAYER_SHOOT_DISAPPEAR
+    ; player_shoot_y < ROWS
+    cmp     ax, ROWS
+    jg      PLAYER_SHOOT_DISAPPEAR
+
+    jmp     PLAYER_SHOOT_DONE
+
+PLAYER_SHOOT_DISAPPEAR:
+    mov byte [player_shoot], 0x0
+    mov byte [player_shoot + 2], 0x0
+    mov word [player_shot], 0x0
+
+PLAYER_SHOOT_DONE:
     pop     ax
 
 ; Dibujar el laberinto
@@ -626,7 +686,7 @@ player:                 dd      0, 0
 player_shoot:           dd      0, 0
 ; Direccion actual del jugador
 ; Usado para saber hacia donde tienen que ir las balas
-shoot_dir:             dw      0x0
+shoot_dir:              dw      0x0
 player_shot:            dw      0x0
 eagle:                  dd      0, 0
 tank1:                  dd      0, 0
