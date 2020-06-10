@@ -621,13 +621,13 @@ destr_tanks             db      0x0
 ; Nivel actual de 1 - 3
 current_level           dw      0x1
 ; Desde el origin de la columna
+; Desde el origin de la fila
 player:                 dd      0, 0
 player_shoot:           dd      0, 0
 ; Direccion actual del jugador
 ; Usado para saber hacia donde tienen que ir las balas
 shoot_dir:             dw      0x0
 player_shot:            dw      0x0
-; Desde el origin de la fila
 eagle:                  dd      0, 0
 tank1:                  dd      0, 0
 tank2:                  dd      0, 0
@@ -636,6 +636,7 @@ tank4:                  dd      0, 0
 shoots:                 dq      0x0,0x0, 0x0,0x0, 0x0,0x0, 0x0,0x0
 DESTROYED_TANKS:        db      "Tanques: ", 0x0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0x0
+
 current_color:          db      0x0
 
 ; Padding Needed for windows since you cant use dd, replace 720K with the needed amount
