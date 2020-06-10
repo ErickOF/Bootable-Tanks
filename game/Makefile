@@ -1,12 +1,12 @@
 .PHONY: all build clean runqemu move
 
-all: build runqemu
+all: build 
 
 APP=tank
-#/dev/sdb
 
+#/dev/sdb
 DEVICE = output.img
-SIZE=6
+SIZE=3
 TANKSIZE = $(shell echo $$(( $(SIZE) - 1 )))
 
 # windows can't use dd, replace it with:

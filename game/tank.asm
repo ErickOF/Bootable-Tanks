@@ -496,6 +496,7 @@ tank1:                  dd      0,0
 tank2:                  dd      0,0
 tank3:                  dd      0,0
 tank4:                  dd      0,0
+tank_dirs:              dd      0,0,0,0
 shoots:                 dq      0,0, 0,0, 0,0, 0,0
 DESTROYED_TANKS:        db      "Tanques: ", 0
 CURRENT_LEVEL_MSG:      db      "Nivel:   ", 0
